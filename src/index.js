@@ -15,13 +15,9 @@ let query = '';
 formEl.addEventListener('submit', formSubmitHandler);
 loadMoreBtnEl.addEventListener('click', loadMoreHandler);
 
-function clearInnerHTML() {
-  galleryEl.innerHTML = '';
-}
-
 async function formSubmitHandler(event) {
   event.preventDefault();
-  clearInnerHTML();
+  galleryEl.innerHTML = '';
   loadMoreBtnEl.classList.add('is-hidden');
   fetchImages.pageRestart();
   query = formEl.elements.searchQuery.value.trim();
@@ -33,6 +29,7 @@ async function formSubmitHandler(event) {
 
   try {
     const { hits, totalHits } = await fetchImages.getImages(query);
+    const totalPages = Math.ceil(totalHits / 40);
     if (!hits.length) {
       Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
@@ -42,8 +39,10 @@ async function formSubmitHandler(event) {
 
     makeImagesMarkup(hits);
     Notify.info(`Hooray! We found ${totalHits} images!`);
-
-    if (totalHits > hits.length) {
+    if (totalPages > 1) {
+      // ((galleryEl.childElementCount - 1) * 40 > totalHits)
+      // (galleryEl.childElementCount < totalHits) 
+      // (totalPages <= galleryEl.childElementCount)
       loadMoreBtnEl.classList.remove('is-hidden');
     }
 
@@ -58,7 +57,7 @@ async function formSubmitHandler(event) {
 async function loadMoreHandler() {
   try {
     const { hits, totalHits } = await fetchImages.getImages(query);
-    clearInnerHTML();
+
     makeImagesMarkup(hits);
     gallery.refresh();
     fetchImages.pageIncrement();
